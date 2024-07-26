@@ -8,7 +8,7 @@ class Chomp1d(nn.Module):
         self.chomp_size = chomp_size
 
     def forward(self, x):
-        return x[:, :, :-self.chomp_size].contiguous()
+        return x[:, :-self.chomp_size].contiguous()
 
 
 class TemporalBlock(nn.Module):
@@ -63,9 +63,9 @@ class Generator(nn.Module):
     """ 
     def __init__(self):
         super(Generator, self).__init__()
-        self.tcn = nn.ModuleList([TemporalBlock(3, 80, kernel_size=1, stride=1, dilation=1, padding=0),
-                                 *[TemporalBlock(80, 80, kernel_size=2, stride=1, dilation=i, padding=i) for i in [1, 2, 4, 8, 16, 32]]])
-        self.last = nn.Conv1d(80, 1, kernel_size=1, stride=1, dilation=1)
+        self.tcn = nn.ModuleList([TemporalBlock(4, 80, kernel_size=1, stride=1, dilation=1, padding=0),
+                                 *[TemporalBlock(80, 80, kernel_size=2, stride=1, dilation=i, padding=i) for i in [1, 2, 4, 8, 16, 32]]])#reduce dilations, change number of channels
+        self.last = nn.Conv1d(80, 3, kernel_size=1, stride=1, dilation=1)
 
     def forward(self, x):
         skip_layers = []
@@ -82,7 +82,7 @@ class Discriminator(nn.Module):
     """ 
     def __init__(self, seq_len, conv_dropout=0.05):
         super(Discriminator, self).__init__()
-        self.tcn = nn.ModuleList([TemporalBlock(1, 80, kernel_size=1, stride=1, dilation=1, padding=0),
+        self.tcn = nn.ModuleList([TemporalBlock(3, 80, kernel_size=1, stride=1, dilation=1, padding=0),
                                  *[TemporalBlock(80, 80, kernel_size=2, stride=1, dilation=i, padding=i) for i in [1, 2, 4, 8, 16, 32]]])
         self.last = nn.Conv1d(80, 1, kernel_size=1, dilation=1)
         self.to_prob = nn.Sequential(nn.Linear(seq_len, 1), nn.Sigmoid())
